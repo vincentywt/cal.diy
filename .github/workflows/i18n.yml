@@ -7,10 +7,13 @@ concurrency:
   group: ${{ github.workflow }}-main
   cancel-in-progress: false
 
+env:
+  HAS_LINGO_KEY: ${{ secrets.CI_LINGO_DOT_DEV_API_KEY != '' }}
+
 jobs:
   i18n:
     name: Run i18n
-    if: ${{ secrets.CI_LINGO_DOT_DEV_API_KEY != '' }}
+    if: ${{ env.HAS_LINGO_KEY == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       actions: write
