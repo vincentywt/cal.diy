@@ -1,0 +1,76 @@
+name: Build and push images
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - "apps/api/v2/Dockerfile"
+      - ".github/workflows/build-images.yml"
+
+env:
+  REGISTRY: ghcr.io
+  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/cal.diy
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/cal.diy-api
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ env.WEB_IMAGE }}:latest
+          build-args: |
+            NEXT_PUBLIC_WEBAPP_URL=http://localhost:3000
+            NEXT_PUBLIC_LICENSE_CONSENT=true
+            CALCOM_TELEMETRY_DISABLED=1
+            NEXTAUTH_SECRET=build-time-placeholder
+            CALENDSO_ENCRYPTION_KEY=build-time-placeholder
+            DATABASE_URL=postgresql://postgres:postgres@localhost:5432/calendso
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/api/v2/Dockerfile
+          push: true
+          tags: ${{ env.API_IMAGE }}:latest
+          build-args: |
+            DATABASE_URL=postgresql://postgres:postgres@localhost:5432/calendso
+            DATABASE_DIRECT_URL=postgresql://postgres:postgres@localhost:5432/calendso
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
