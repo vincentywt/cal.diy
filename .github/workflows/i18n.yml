@@ -7,13 +7,21 @@ concurrency:
   group: ${{ github.workflow }}-main
   cancel-in-progress: false
 
-env:
-  HAS_LINGO_KEY: ${{ secrets.CI_LINGO_DOT_DEV_API_KEY != '' }}
-
 jobs:
+  check-secrets:
+    name: Check for Lingo.dev key
+    runs-on: ubuntu-latest
+    outputs:
+      has_key: ${{ steps.check.outputs.has_key }}
+    steps:
+      - name: Check
+        id: check
+        run: echo "has_key=${{ secrets.CI_LINGO_DOT_DEV_API_KEY != '' }}" >> "$GITHUB_OUTPUT"
+
   i18n:
     name: Run i18n
-    if: ${{ env.HAS_LINGO_KEY == 'true' }}
+    needs: check-secrets
+    if: ${{ needs.check-secrets.outputs.has_key == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       actions: write
