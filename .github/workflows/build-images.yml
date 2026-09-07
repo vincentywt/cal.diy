@@ -38,7 +38,7 @@ jobs:
           push: true
           tags: ${{ env.WEB_IMAGE }}:latest
           build-args: |
-            NEXT_PUBLIC_WEBAPP_URL=http://localhost:3000
+            NEXT_PUBLIC_WEBAPP_URL=http://macmini.taile2aa8e.ts.net:3100
             NEXT_PUBLIC_LICENSE_CONSENT=true
             CALCOM_TELEMETRY_DISABLED=1
             NEXTAUTH_SECRET=build-time-placeholder
